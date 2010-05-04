@@ -41,7 +41,7 @@ int hash_put(struct hash *hash, char *key, void *value)
 	kv->key = key;
 	kv->value = value;
 
-	list_add_tail(&kv->list, &hash[h]);
+	list_add_tail(&kv->list, &hash->hash[h]);
 
 	hash->nb_elems++;
 
@@ -53,9 +53,9 @@ void *hash_get(struct hash *hash, const char *key)
 	struct list_head *l;
 	unsigned long h = compute_hash(key) % hash->key_size;
 
-	if (list_empty(&hash[h]))
+	if (list_empty(&hash->hash[h]))
 		return NULL;
-	list_for_each(l, &hash[h]) {
+	list_for_each(l, &hash->hash[h]) {
 		struct key_val *kv = container_of(l, struct key_val, list);
 		if (!strcmp(key, kv->key)) {
 			return kv->value;
@@ -68,7 +68,7 @@ void hash_free(struct hash *hash)
 	int i;
 	struct list_head *l, *n;
 	for (i = 0; i < hash->key_size; i++) {
-		list_for_each_safe(l, n, &hash[i]) {
+		list_for_each_safe(l, n, &hash->hash[i]) {
 			struct key_val *kv = container_of(l, struct key_val, list);
 			list_del(l);
 			free(kv->value);
@@ -95,7 +95,7 @@ struct hash *hash_init(int key_bits)
 	}
 
 	for (i = 0; i < key_size; i++) {
-		INIT_LIST(&hash[i]);
+		INIT_LIST(&hash->hash[i]);
 	}
 
 	hash->key_size = key_size;
