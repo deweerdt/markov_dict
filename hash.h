@@ -2,11 +2,17 @@
 #define __HASH_H__
 
 #include "list.h"
-typedef struct list_head hash_t;
 
-hash_t *hash_init(void);
-void hash_free(hash_t *hash);
-void *hash_get(hash_t *hash, const char *key);
-int hash_put(hash_t *hash, char *key, void *value);
+struct hash {
+	struct list_head *hash;
+	int key_size;
+	int nb_elems;
+};
+
+int hash_size(struct hash *hash);
+struct hash *hash_init(int size);
+void hash_free(struct hash *hash);
+void *hash_get(struct hash *hash, const char *key);
+int hash_put(struct hash *hash, char *key, void *value);
 
 #endif /* __HASH_H__ */

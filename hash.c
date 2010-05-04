@@ -4,8 +4,10 @@
 #include "list.h"
 #include "hash.h"
 
+/*
 #define KEY_SIZE 4
 #define HASH_SIZE (1 << KEY_SIZE)
+*/
 
 struct key_val {
 	char *key;
@@ -27,10 +29,10 @@ unsigned long compute_hash(const char *s)
 	return h;
 }
 
-int hash_put(hash_t *hash, char *key, void *value)
+int hash_put(struct hash *hash, char *key, void *value)
 {
 	struct key_val *kv;
-	unsigned long h = compute_hash(key) % HASH_SIZE;
+	unsigned long h = compute_hash(key) % hash->key_size;
 
 	kv = malloc(sizeof(*kv));
 	if (!kv)
@@ -40,13 +42,16 @@ int hash_put(hash_t *hash, char *key, void *value)
 	kv->value = value;
 
 	list_add_tail(&kv->list, &hash[h]);
+
+	hash->nb_elems++;
+
 	return 1;
 }
 
-void *hash_get(hash_t *hash, const char *key)
+void *hash_get(struct hash *hash, const char *key)
 {
 	struct list_head *l;
-	unsigned long h = compute_hash(key) % HASH_SIZE;
+	unsigned long h = compute_hash(key) % hash->key_size;
 
 	if (list_empty(&hash[h]))
 		return NULL;
@@ -58,11 +63,11 @@ void *hash_get(hash_t *hash, const char *key)
 	}
 	return NULL;
 }
-void hash_free(hash_t *hash)
+void hash_free(struct hash *hash)
 {
 	int i;
 	struct list_head *l, *n;
-	for (i = 0; i < HASH_SIZE; i++) {
+	for (i = 0; i < hash->key_size; i++) {
 		list_for_each_safe(l, n, &hash[i]) {
 			struct key_val *kv = container_of(l, struct key_val, list);
 			list_del(l);
@@ -73,19 +78,33 @@ void hash_free(hash_t *hash)
 	}
 }
 
-hash_t *hash_init(void)
+struct hash *hash_init(int key_bits)
 {
 	int i;
-	hash_t *hash;
+	struct hash *hash;
+	int key_size = 1 << key_bits;
 
-	hash = calloc(HASH_SIZE, sizeof(hash[0]));
+	hash = calloc(1, sizeof(*hash));
 	if (!hash)
 		return NULL;
 
-	for (i = 0; i < HASH_SIZE; i++) {
+	hash->hash = calloc(key_size, sizeof(hash->hash[0]));
+	if (!hash->hash) {
+		free(hash);
+		return NULL;
+	}
+
+	for (i = 0; i < key_size; i++) {
 		INIT_LIST(&hash[i]);
 	}
+
+	hash->key_size = key_size;
+
 	return hash;
 }
 
+int hash_size(struct hash *hash)
+{
+	return hash->nb_elems;
+}
 
