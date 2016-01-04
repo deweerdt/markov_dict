@@ -19,9 +19,8 @@ int main(int argc, char **argv)
 	struct markov *m;
 	int i, j;
         int opt, gen_names, min_size, max_size;
-	int unsucess_full_tries, token_length;
+	int unsucess_full_tries;
 
-	token_length = 1;
 	min_size = 0;
 	gen_names = 10;
 	max_size = INT_MAX;
